@@ -1,6 +1,6 @@
-# Laporan Proyek Machine Learning - Nama Anda
+# Laporan Proyek Machine Learning
 
-Anggota:
+## Anggota:
 - Naufal Arsapradhana (225150701111028)
 - Ahmad Faiz Agustianto (225150707111068)
 - Kevin Joasua Situmorang (225150707111057)
@@ -274,8 +274,262 @@ data.duplicated().sum()
 
 Pengecekan duplikasi dilakukan untuk memastikan dataset bersih dari entri yang terulang.
 
+### Label Encoding
 
-Proses **data preparation** yang dilakukan ini melibatkan pengecekan dan penanganan data hilang dengan imputasi, baik untuk kolom numerik menggunakan rata-rata dan untuk kolom kategorikal dengan nilai terbanyak. Setelah imputasi, data kembali diperiksa dan tidak ditemukan nilai yang hilang. Selain itu, pengecekan duplikasi memastikan tidak ada data yang terduplikasi.
+Pada bagian ini, dilakukan encoding pada data kategorikal agar dapat digunakan dalam pemodelan machine learning. Algoritma machine learning biasanya memerlukan data numerik untuk dapat memproses dan melakukan prediksi. **Label Encoding** digunakan untuk mengonversi kategori dalam fitur kategorikal menjadi bentuk numerik.
+
+#### Visualisasi Distribusi Data pada Kolom Kategorikal
+Hal ini bertujuan untuk memahami frekuensi kemunculan setiap kategori dalam setiap kolom kategorikal.
+
+```python
+# Membuat visualisasi distribusi data pada kolom kategorikal
+num_columns = len(data_categorical_cols.columns)
+plt.figure(figsize=(15, 5 * (num_columns // 2 + num_columns % 2)))
+
+# Membuat grafik untuk setiap kolom dan mem-plot nilai unik
+for i, column in enumerate(data_categorical_cols.columns):
+    plt.subplot((num_columns // 2 + num_columns % 2), 2, i + 1)  
+    unique_values = data_categorical_cols[column].value_counts() 
+    sns.barplot(x=unique_values.index, y=unique_values.values)
+    # Memberi label pada grafik
+    plt.title(f'Unique Values in {column}')
+    plt.xlabel(column)
+    plt.ylabel('Count')
+    plt.xticks(rotation=45)
+
+# Mengatur tata letak
+plt.tight_layout()
+plt.show()
+```
+![Distribution Bar Plot](./distribution-bar-plot.png)
+
+#### Proses Label Encoding
+langkah selanjutnya adalah melakukan Label Encoding untuk mengonversi kategori menjadi angka. Ini dilakukan dengan menggunakan LabelEncoder dari library ``scikit-learn``.
+
+```python
+from sklearn.preprocessing import LabelEncoder
+
+label_encoder = LabelEncoder()
+
+# Mengaplikasikan LabelEncoder untuk setiap kolom data kategorikal
+for column in categorical_cols:
+    data[f'{column}_encoded'] = label_encoder.fit_transform(data[column])
+
+# Menampilkan 5 baris pertama setelah Label Encoding
+data.head()
+```
+
+| **Hours_Studied** | **Attendance** | **Parental_Involvement_encoded** | **Access_to_Resources_encoded** | **Extracurricular_Activities_encoded** | **Sleep_Hours** | **Previous_Scores** | **Motivation_Level_encoded** | **Internet_Access_encoded** | **Tutoring_Sessions** | **Family_Income_encoded** | **Teacher_Quality_encoded** | **School_Type_encoded** | **Peer_Influence_encoded** | **Physical_Activity** | **Learning_Disabilities_encoded** | **Parental_Education_Level_encoded** | **Distance_from_Home_encoded** | **Gender_encoded** | **Exam_Score** |
+|-------------------|----------------|----------------------------------|---------------------------------|----------------------------------------|-----------------|----------------------|-----------------------------|-----------------------------|-----------------------|---------------------------|---------------------------|------------------------|----------------------------|-----------------------|---------------------------------|--------------------------------------|---------------------------|-----------------|--------|
+| 23.0              | 84.0           | 1                                | 1                               | 0                                      | 7.0             | 73.0                 | 1                           | 1                           | 0.0                   | 1                         | 2                         | 1                        | 2                          | 0                     | 1                               | 2                                    | 1                         | 1               | 67              |
+| 19.0              | 64.0           | 1                                | 0                               | 0                                      | 8.0             | 59.0                 | 1                           | 1                           | 2.0                   | 2                         | 2                         | 1                        | 0                          | 0                     | 0                               | 0                                    | 1                         | 0               | 61              |
+| 24.0              | 98.0           | 2                                | 0                               | 1                                      | 7.0             | 91.0                 | 2                           | 1                           | 2.0                   | 2                         | 2                         | 1                        | 1                          | 0                     | 2                               | 2                                    | 1                         | 1               | 74              |
+| 29.0              | 89.0           | 1                                | 0                               | 1                                      | 8.0             | 98.0                 | 2                           | 1                           | 1.0                   | 2                         | 2                         | 1                        | 0                          | 0                     | 1                               | 1                                    | 1                         | 1               | 71              |
+| 19.0              | 92.0           | 2                                | 0                               | 1                                      | 6.0             | 65.0                 | 2                           | 1                           | 3.0                   | 2                         | 0                         | 1                        | 1                          | 0                     | 0                               | 2                                    | 0                         | 0               | 70              |
+
+- Label Encoding bertujuan untuk mengubah data kategorikal menjadi bentuk numerik, sehingga bisa digunakan oleh algoritma machine learning.
+- Setiap kategori unik dalam kolom kategorikal akan diberi label numerik.
+- Distribusi ini dapat menentukan apakah perlu dilakukan tindakan seperti encoding, resampling, atau pengelompokan ulang kategori agar model dapat berfungsi lebih baik.
+
+### Scaler
+Pada bagian ini, dilakukan scaling data numerik untuk memastikan data berada dalam skala yang teratur sebelum diproses ke dalam model. 
+
+#### StandardScaler dan MinMaxScaler
+- **StandardScaler** digunakan untuk mengubah data sehingga memiliki distribusi dengan rata-rata (mean) 0 dan standar deviasi (standard deviation) 1.
+  
+  **Rumus Transformasi StandardScaler**:
+  \[
+  z = \frac{x - \mu}{\sigma}
+  \]
+  di mana:
+  - \( x \) adalah nilai data
+  - \( \mu \) adalah rata-rata dari data
+  - \( \sigma \) adalah standar deviasi dari data
+
+- **MinMaxScaler** digunakan untuk mengubah data ke dalam skala tertentu, biasanya antara 0 dan 1 (default).
+  
+  **Rumus Transformasi MinMaxScaler**:
+  \[
+  x' = \frac{x - \min(x)}{\max(x) - \min(x)}
+  \]
+  di mana:
+  - \( x \) adalah nilai data
+  - \( \min(x) \) adalah nilai minimum dari data
+  - \( \max(x) \) adalah nilai maksimum dari data
+
+#### Penerapan Scaler pada Kolom Data
+```python
+# Mengubah skala data pada kolom tertentu menggunakan Standard Scaler dan MinMax Scaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+
+# Mengaplikasikan StandardScaler pada variabel yang mempunyai distribusi normal
+scaler = StandardScaler()
+
+data[['Hours_Studied', 'Sleep_Hours', 'Physical_Activity']] = scaler.fit_transform(
+    data[['Hours_Studied', 'Sleep_Hours', 'Physical_Activity']]
+)
+
+# Mengaplikasikan MinMaxScaler untuk data berskala antara 0, 1 secara default
+min_max_scaler = MinMaxScaler()
+
+data[['Attendance', 'Previous_Scores']] = min_max_scaler.fit_transform(
+    data[['Attendance', 'Previous_Scores']]
+)
+```
+
+Tujuan dari Scaling:
+
+- Beberapa algoritma seperti SVM dan KNN sensitif terhadap skala data. Scaling memastikan bahwa setiap variabel memiliki pengaruh yang setara dalam model.
+- Tanpa scaling, data dengan skala besar (misalnya, 1.000.000 vs. 0,1) dapat menyebabkan model memberikan bobot yang tidak proporsional terhadap variabel berskala besar.
+- Scaling membantu meningkatkan akurasi dan efisiensi model dengan memastikan bahwa data memiliki skala yang seragam.
+
+```python
+data.head()
+```
+
+| **Hours_Studied** | **Attendance** | **Parental_Involvement** | **Access_to_Resources** | **Extracurricular_Activities** | **Sleep_Hours** | **Previous_Scores** | **Motivation_Level** | **Internet_Access** | **Tutoring_Sessions** | **Family_Income** | **Teacher_Quality** | **School_Type** | **Peer_Influence** | **Physical_Activity** | **Learning_Disabilities** | **Parental_Education_Level** | **Distance_from_Home** | **Gender** | **Exam_Score** |
+|-------------------|----------------|--------------------------|--------------------------|-------------------------------|-----------------|----------------------|-----------------------|----------------------|-----------------------|------------------|--------------------|----------------|-------------------|------------------------|---------------------------|----------------------------|-------------------------|------------|---------------|
+| 0.504942          | 0.600          | Low                      | High                     | No                            | -0.019796       | 0.46                 | Low                   | Yes                  | 0.0                   | 1                | 2                  | 1              | 2                 | 0                      | 1                         | 2                          | 1                       | 1          | 67            |
+| -0.162822         | 0.100          | Low                      | Medium                   | No                            | 0.661399        | 0.18                 | Low                   | Yes                  | 2.0                   | 2                | 2                  | 1              | 0                 | 0                      | 0                         | 0                          | 1                       | 0          | 61            |
+| 0.671882          | 0.950          | Medium                   | Medium                   | Yes                           | -0.019796       | 0.82                 | Medium                | Yes                  | 2.0                   | 2                | 2                  | 1              | 1                 | 0                      | 2                         | 2                          | 1                       | 1          | 74            |
+| 1.506587          | 0.725          | Low                      | Medium                   | Yes                           | 0.661399        | 0.96                 | Medium                | Yes                  | 1.0                   | 2                | 2                  | 1              | 0                 | 0                      | 1                         | 1                          | 1                       | 1          | 71            |
+| -0.162822         | 0.800          | Medium                   | Medium                   | Yes                           | -0.700990       | 0.30                 | Medium                | Yes                  | 3.0                   | 2                | 0                  | 1              | 1                 | 0                      | 0                         | 2                          | 0                       | 0          | 70            |
+
+#### Tipe Data Setelah Scaling
+
+```python
+# Melihat tipe data pada data setelah di transformasi
+data.dtypes
+```
+```plaintext
+Hours_Studied 	float64
+Attendance 	float64
+Parental_Involvement 	object
+Access_to_Resources 	object
+Extracurricular_Activities 	object
+Sleep_Hours 	float64
+Previous_Scores 	float64
+Motivation_Level 	object
+Internet_Access 	object
+Tutoring_Sessions 	float64
+Family_Income 	object
+Teacher_Quality 	object
+School_Type 	object
+Peer_Influence 	object
+Physical_Activity 	float64
+Learning_Disabilities 	object
+Parental_Education_Level 	object
+Distance_from_Home 	object
+Gender 	object
+Exam_Score 	float64
+Parental_Involvement_encoded 	int64
+Access_to_Resources_encoded 	int64
+Extracurricular_Activities_encoded 	int64
+Motivation_Level_encoded 	int64
+Internet_Access_encoded 	int64
+Family_Income_encoded 	int64
+Teacher_Quality_encoded 	int64
+School_Type_encoded 	int64
+Peer_Influence_encoded 	int64
+Learning_Disabilities_encoded 	int64
+Parental_Education_Level_encoded 	int64
+Distance_from_Home_encoded 	int64
+Gender_encoded 	int64
+```
+
+- StandardScaler dan MinMaxScaler digunakan untuk memastikan data berada pada skala yang konsisten.
+- Scaling penting untuk model yang sensitif terhadap skala data seperti SVM dan KNN, yang membantu meningkatkan performa dan efisiensi model.
+
+
+### Feature Engineering
+Pada bagian ini, dilakukan beberapa teknik **feature engineering** untuk memanipulasi dan memilih fitur yang penting dalam dataset.
+
+#### Memilih Kolom Numerik
+Langkah pertama adalah memilih kolom-kolom yang berisi data numerik dari dataset untuk analisis lebih lanjut.
+```python
+# Memilih kolom yang berisi data numerik
+numerical_all_colslist = data.select_dtypes(include=['float64', 'int64','int32']).columns
+
+# Membuat subset data
+numerical_all_cols = data[numerical_all_colslist]
+
+# Menampilkan lima baris pertama
+numerical_all_cols.head()
+```
+
+| **Hours_Studied** | **Attendance** | **Sleep_Hours** | **Previous_Scores** | **Tutoring_Sessions** | **Physical_Activity** | **Exam_Score** | **Parental_Involvement_encoded** | **Access_to_Resources_encoded** | **Extracurricular_Activities_encoded** | **Motivation_Level_encoded** | **Internet_Access_encoded** | **Family_Income_encoded** | **Teacher_Quality_encoded** | **School_Type_encoded** | **Peer_Influence_encoded** | **Learning_Disabilities_encoded** | **Parental_Education_Level_encoded** | **Distance_from_Home_encoded** | **Gender_encoded** |
+|-------------------|----------------|-----------------|---------------------|------------------------|------------------------|----------------|----------------------------------|---------------------------------|----------------------------------------|--------------------------------|-----------------------------|---------------------------|----------------------------|--------------------------|---------------------------|------------------------------------|------------------------------------|---------------------------|-----------------|
+| 0.504942          | 0.600          | -0.019796       | 0.46                | 0.0                    | 0.031411               | 67.0           | 1                                | 0                               | 0                                      | 1                              | 1                           | 1                         | 2                          | 1                        | 2                         | 0                                | 1                                  | 2                          | 1               |
+| -0.162822         | 0.100          | 0.661399        | 0.18                | 2.0                    | 1.001199               | 61.0           | 1                                | 2                               | 0                                      | 1                              | 1                           | 2                         | 2                          | 1                        | 0                         | 0                                | 1                                  | 0                          | 0               |
+| 0.671882          | 0.950          | -0.019796       | 0.82                | 2.0                    | 1.001199               | 74.0           | 2                                | 2                               | 1                                      | 2                              | 1                           | 2                         | 2                          | 1                        | 1                         | 0                                | 2                                  | 2                          | 1               |
+| 1.506587          | 0.725          | 0.661399        | 0.96                | 1.0                    | 1.001199               | 71.0           | 1                                | 2                               | 1                                      | 2                              | 1                           | 2                         | 2                          | 1                        | 0                         | 0                                | 1                                  | 1                          | 1               |
+| -0.162822         | 0.800          | -0.700990       | 0.30                | 3.0                    | 1.001199               | 70.0           | 2                                | 2                               | 1                                      | 2                              | 1                           | 2                         | 0                          | 1                        | 1                         | 0                                | 0                                  | 2                          | 0               |
+
+
+#### Korelasi Antar Kolom
+Setelah memilih kolom numerik, dilakukan perhitungan matriks korelasi antar kolom numerik untuk mengetahui hubungan antar fitur. Korelasi ini dihitung menggunakan fungsi ``.corr()`` dan divisualisasikan menggunakan heatmap.
+
+```python
+# Menggunakan Correlation Matrix antar kolom
+corr_matrix = numerical_all_cols.corr()
+plt.figure(figsize=(12, 8))
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
+plt.show()
+```
+![Heatmap 1](./heatmap-1.png)
+
+Korelasi mengukur sejauh mana dua variabel numerik berkaitan secara linear, dengan nilai antara -1 (hubungan negatif sempurna) hingga +1 (hubungan positif sempurna).
+
+#### Menghapus Kolom dengan Korelasi Lemah
+Setelah melihat korelasi antar kolom, dilakukan penghapusan kolom dengan korelasi yang lemah terhadap target.
+
+```python
+# Menghapus kolom 'Sleep_Hours' dan 'Physical_Activity' karena memiliki korelasi yang lemah pada performa ujian siswa
+data_numerical_all_cols = numerical_all_cols.drop(['Sleep_Hours', 'Physical_Activity'], axis=1)
+data_numerical_all_cols.head()
+```
+- Menghilangkan fitur yang tidak penting untuk menghindari model yang kompleks dan menjaga agar model tetap sederhana dan efisien.
+- Memastikan hanya fitur yang memiliki korelasi signifikan dengan target yang digunakan untuk pelatihan model.
+
+#### Korelasi Antar Kolum Terbaru
+```python
+corr_matrix = data_numerical_all_cols.corr()
+plt.figure(figsize=(12, 8))
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
+plt.show()
+```
+![Heatmap 2](./heatmap-2.png)
+
+#### Menghapus Kolom dengan Korelasi Lemah
+Pada langkah ini, dilakukan penyederhanaan dataset dengan menghapus fitur yang tidak terlalu berpengaruh atau relevan
+```python
+# Menghapus fitur yang kurang penting
+data_numerical_all_cols_Gender = numerical_all_cols.drop(['Gender_encoded', 'Family_Income_encoded','Learning_Disabilities_encoded', 'Internet_Access_encoded'], axis=1)
+data_numerical_all_cols_Gender.head()
+```
+
+#### Visualisasi Korelasi Terakhir Setelah Penghapusan Fitur
+Setelah penghapusan fitur yang kurang penting, dilakukan visualisasi ulang matriks korelasi untuk memastikan hanya fitur yang signifikan yang tersisa dalam dataset.
+```python
+final_data = data_numerical_all_cols_Gender
+
+# Korelasi setelah penghapusan fitur kurang penting
+corr_matrix = final_data.corr()
+plt.figure(figsize=(12, 8))
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
+plt.show()
+```
+| **Hours_Studied** | **Attendance** | **Previous_Scores** | **Tutoring_Sessions** | **Exam_Score** | **Parental_Involvement_encoded** | **Access_to_Resources_encoded** | **Extracurricular_Activities_encoded** | **Motivation_Level_encoded** | **Internet_Access_encoded** | **Family_Income_encoded** | **Teacher_Quality_encoded** | **School_Type_encoded** | **Peer_Influence_encoded** | **Parental_Education_Level_encoded** | **Distance_from_Home_encoded** |
+|-------------------|----------------|---------------------|------------------------|----------------|----------------------------------|---------------------------------|----------------------------------------|--------------------------------|-----------------------------|---------------------------|----------------------------|--------------------------|---------------------------|------------------------------------|------------------------------------|
+| 0.504942          | 0.600          | 0.46                | 0.0                    | 67.0           | 1                                | 0                               | 0                                      | 1                              | 1                           | 1                         | 2                          | 1                        | 2                         | 1                                | 2                                  |
+| -0.162822         | 0.100          | 0.18                | 2.0                    | 61.0           | 1                                | 2                               | 0                                      | 1                              | 1                           | 2                         | 2                          | 1                        | 0                         | 0                                | 1                                  |
+| 0.671882          | 0.950          | 0.82                | 2.0                    | 74.0           | 2                                | 2                               | 1                                      | 2                              | 1                           | 2                         | 2                          | 1                        | 1                         | 0                                | 2                                  |
+| 1.506587          | 0.725          | 0.96                | 1.0                    | 71.0           | 1                                | 2                               | 1                                      | 2                              | 1                           | 2                         | 2                          | 1                        | 0                         | 0                                | 1                                  |
+| -0.162822         | 0.800          | 0.30                | 3.0                    | 70.0           | 2                                | 2                               | 1                                      | 2                              | 1                           | 2                         | 0                          | 1                        | 1                         | 0                                | 2                                  |
+
+- Memastikan bahwa dataset yang tersisa hanya berisi fitur-fitur yang penting dan relevan untuk analisis lebih lanjut.
+
+Proses **data preparation** yang dilakukan mencakup pengecekan nilai yang hilang dan imputasi dengan menggunakan rata-rata untuk kolom numerik dan nilai terbanyak untuk kolom kategorikal. Setelah imputasi, data diperiksa kembali dan tidak ditemukan nilai yang hilang. Selain itu, dilakukan scaling pada beberapa kolom numerik dan label encoding pada kolom kategorikal untuk memastikan data siap digunakan dalam model machine learning. Kolom yang tidak relevan berdasarkan analisis korelasi juga dihapus untuk menyederhanakan dataset.
 
 ## Modeling
 Pada tahap ini, dilakukan proses pemodelan untuk memprediksi nilai ujian akhir siswa (**Exam_Score**) berdasarkan faktor-faktor internal dan eksternal. Proses ini mencakup pembagian data, standarisasi fitur, dan pelatihan model menggunakan tiga algoritma berbeda: **Random Forest Regressor**, **Support Vector Regressor (SVR)**, dan **K-Neighbors Regressor (KNN)**. Berikut adalah tahapan yang dilakukan:
