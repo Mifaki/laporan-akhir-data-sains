@@ -162,11 +162,120 @@ data.shape
 Berdasarkan informasi yang diperoleh dari dataset, terdapat **6607 entri** dan **20 kolom** dengan berbagai tipe data, baik numerik maupun kategorikal. Dataset ini mencakup faktor-faktor eksternal dan internal yang mempengaruhi performa akademik siswa, seperti **jam belajar**, **keterlibatan orang tua**, **akses ke sumber daya**, **kualitas guru**, serta **aktivitas ekstrakurikuler**. Data ini juga menunjukkan adanya beberapa kolom dengan nilai yang hilang, seperti **Teacher_Quality**, **Parental_Education_Level**, dan **Distance_from_Home**.
 
 ## Data Preparation
-Pada bagian ini Anda menerapkan dan menyebutkan teknik data preparation yang dilakukan. Teknik yang digunakan pada notebook dan laporan harus berurutan.
+Pada bagian ini, dilakukan beberapa teknik **data preparation** untuk memastikan data yang digunakan dalam model prediksi bersih dan siap diproses lebih lanjut. Berikut adalah tahapan-tahapan yang dilakukan dalam proses persiapan data:
 
-**Rubrik/Kriteria Tambahan (Opsional)**: 
-- Menjelaskan proses data preparation yang dilakukan
-- Menjelaskan alasan mengapa diperlukan tahapan data preparation tersebut.
+### Pengecekan untuk Data null
+Pertama, dilakukan pengecekan terhadap kolom-kolom yang memiliki nilai null atau hilang dengan menggunakan
+```python
+# Melakukan pengecekan untuk data null
+print(data.isnull().sum())
+```
+```plaintext
+Hours_Studied                 0
+Attendance                    0
+Parental_Involvement          0
+Access_to_Resources           0
+Extracurricular_Activities    0
+Sleep_Hours                   0
+Previous_Scores               0
+Motivation_Level              0
+Internet_Access               0
+Tutoring_Sessions             0
+Family_Income                 0
+Teacher_Quality               78
+School_Type                   0
+Peer_Influence                0
+Physical_Activity             0
+Learning_Disabilities         0
+Parental_Education_Level      90
+Distance_from_Home            67
+Gender                        0
+Exam_Score                    0
+dtype: int64
+```
+
+Langkah ini dilakukan untuk mengidentifikasi kolom yang memiliki data hilang (null). Data yang hilang dapat mempengaruhi kualitas analisis dan pemodelan
+
+### Visualisasi Missing Data
+Untuk lebih memahami distribusi data yang hilang, dilakukan visualisasi dengan diagram batang untuk melihat jumlah nilai hilang di setiap kolom.
+```python
+# Memvisualisasikan kolom yang memiliki null value
+missing_data = data.isnull().sum()
+
+# Visualisasi menggunakan diagram batang
+missing_data.plot(kind='bar', figsize=(8, 4))
+plt.title("Missing Values Count by Column")
+plt.ylabel("Number of Missing Values")
+plt.show()
+```
+![Missing Value By Column](./missing-value-diagram.png)
+
+Visualisasi ini membantu untuk memberikan gambaran yang jelas dan cepat mengenai sebaran data yang hilang di setiap kolom
+
+### Imputation
+Untuk menangani nilai yang hilang, dilakukan imputasi data dengan ketentuan:
+- Menggunakan nilai rata-rata (``mean``) untuk mengisi nilai yang hilang pada kolom numerik.
+- Menggunakan nilai terbanyak (``most_frequent``) untuk mengisi nilai yang hilang pada kolom kategorikal.
+
+```python
+# Imputasi data numerik
+num_imputer = SimpleImputer(strategy='mean')
+data[numerical_cols] = num_imputer.fit_transform(data[numerical_cols])
+
+# Imputasi data kategorikal
+cat_imputer = SimpleImputer(strategy='most_frequent')
+data[categorical_cols] = cat_imputer.fit_transform(data[categorical_cols])
+```
+
+Imputasi dilakukan untuk mengganti nilai yang hilang dengan nilai yang masuk akal, yaitu rata-rata untuk data numerik dan nilai terbanyak untuk data kategorikal. Tanpa imputasi, nilai yang hilang bisa menyebabkan error atau bias dalam model prediksi
+
+Setelah imputasi, dilakukan pengecekan kembali untuk memastikan tidak ada lagi nilai null dalam dataset.
+
+```python
+# Melakukan pengecekan untuk kolom dengan null value
+print(data.isnull() .sum())
+```
+```plaintext
+Hours_Studied                 0
+Attendance                    0
+Parental_Involvement          0
+Access_to_Resources           0
+Extracurricular_Activities    0
+Sleep_Hours                   0
+Previous_Scores               0
+Motivation_Level              0
+Internet_Access               0
+Tutoring_Sessions             0
+Family_Income                 0
+Teacher_Quality               0
+School_Type                   0
+Peer_Influence                0
+Physical_Activity             0
+Learning_Disabilities         0
+Parental_Education_Level      0
+Distance_from_Home            0
+Gender                        0
+Exam_Score                    0
+dtype: int64
+```
+
+Pengecekan ini memastikan bahwa tidak ada nilai yang hilang setelah proses imputasi, yang membuat dataset siap digunakan untuk model tanpa ada kekurangan data.
+
+
+Terakhir, dilakukan pengecekan untuk memastikan tidak ada data duplikat dalam dataset.
+
+```python
+# Melakukan pengecekan adanya duplikasi data
+data.duplicated().sum()
+```
+```plaintext
+0
+```
+
+Pengecekan duplikasi dilakukan untuk memastikan dataset bersih dari entri yang terulang.
+
+
+Proses **data preparation** yang dilakukan ini melibatkan pengecekan dan penanganan data hilang dengan imputasi, baik untuk kolom numerik menggunakan rata-rata dan untuk kolom kategorikal dengan nilai terbanyak. Setelah imputasi, data kembali diperiksa dan tidak ditemukan nilai yang hilang. Selain itu, pengecekan duplikasi memastikan tidak ada data yang terduplikasi.
 
 ## Modeling
 Tahapan ini membahas mengenai model machine learning yang digunakan untuk menyelesaikan permasalahan. Anda perlu menjelaskan tahapan dan parameter yang digunakan pada proses pemodelan.
