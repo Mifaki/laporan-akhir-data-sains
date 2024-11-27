@@ -21,7 +21,8 @@ Hanya **18% siswa** Indonesia yang mencapai tingkat kemahiran minimal (Level 2) 
 Kondisi ini dipengaruhi oleh berbagai faktor internal dan eksternal. Misalnya, faktor eksternal seperti **kualitas fasilitas belajar** dan **tingkat pendapatan orang tua**, serta faktor internal seperti **motivasi siswa** dan **kebiasaan belajar**. Selain itu, dampak pandemi COVID-19 yang memaksa penutupan sekolah hingga lebih dari tiga bulan turut memberikan pengaruh negatif pada hasil belajar siswa.
 
 
-![Skor PSA Indonesia](./skor-psa-indonesia.png)
+![Sokr PSA Indonesia](https://github.com/user-attachments/assets/057878bb-8435-4c95-9f64-7a2a8d114c1d)
+<br />
 <sup>Sumber: [Data Kualitas Pendidikan Siswa Indonesia](https://dataindonesia.id/pendidikan/detail/data-kualitas-pendidik)</sup>
 
 Selain itu, sesuai dengan data pada diagram di atas, ditinjau dari skor literasi atau membaca, Indonesia memiliki nilai rata-rata sebesar 359 pada 2022. Angka tersebut menurun 12 poin dibandingkan periode 2018 dengan skor 371. Kemudian, skor numerasi atau perhitungan matematika Indonesia sebesar 366 poin. Nilainya juga turun 13 poin dibandingkan tahun 2018 dengan nilai 379 poin. Selain itu, penilaian sains yang dimiliki Indonesia sebesar 383 poin. Angkanya juga menurun dari 2018 yang sebesar 396 poin.
@@ -79,7 +80,7 @@ Pada proyek ini, data yang digunakan bertujuan untuk menganalisis faktor-faktor 
 | **Hours_Studied**            | Jumlah jam yang dihabiskan siswa untuk belajar per minggu.                                                      |
 | **Attendance**               | Persentase kelas yang dihadiri oleh siswa.                                                                      |
 | **Parental_Involvement**     | Tingkat keterlibatan orang tua dalam pendidikan siswa (``Low``, ``Medium``, ``High``).                                       |
-| **Access_to_Resources**      | Ketersediaan sumber daya pendidikan (``Low``Low``, ``Medium``, ``High``).                                                        |
+| **Access_to_Resources**      | Ketersediaan sumber daya pendidikan (``Low``, ``Medium``, ``High``).                                                        |
 | **Extracurricular_Activities**| Partisipasi dalam kegiatan ekstrakurikuler (``Yes``, ``No``).                                                           |
 | **Sleep_Hours**              | Rata-rata jumlah jam tidur per malam yang dimiliki siswa.                                                       |
 | **Previous_Scores**          | Nilai ujian dari ujian sebelumnya.                                                                              |
@@ -208,7 +209,8 @@ plt.title("Missing Values Count by Column")
 plt.ylabel("Number of Missing Values")
 plt.show()
 ```
-![Missing Value By Column](./missing-value-diagram.png)
+![Missing Value by Column](https://github.com/user-attachments/assets/5efe7a14-bc1f-4266-a26a-a8f657d5a6c8)
+
 
 Visualisasi ini membantu untuk memberikan gambaran yang jelas dan cepat mengenai sebaran data yang hilang di setiap kolom
 
@@ -301,7 +303,8 @@ for i, column in enumerate(data_categorical_cols.columns):
 plt.tight_layout()
 plt.show()
 ```
-![Distribution Bar Plot](./distribution-bar-plot.png)
+![Distribution Bar Plot](https://github.com/user-attachments/assets/2338a54c-e5b5-4c14-ae36-6f18999bb207)
+
 
 #### Proses Label Encoding
 langkah selanjutnya adalah melakukan Label Encoding untuk mengonversi kategori menjadi angka. Ini dilakukan dengan menggunakan LabelEncoder dari library ``scikit-learn``.
@@ -476,7 +479,7 @@ plt.figure(figsize=(12, 8))
 sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
 plt.show()
 ```
-![Heatmap 1](./heatmap-1.png)
+![Heatmap 1](https://github.com/user-attachments/assets/ac260910-e0ab-42b9-8ae2-c6a47681cbdd)
 
 Korelasi mengukur sejauh mana dua variabel numerik berkaitan secara linear, dengan nilai antara -1 (hubungan negatif sempurna) hingga +1 (hubungan positif sempurna).
 
@@ -498,7 +501,8 @@ plt.figure(figsize=(12, 8))
 sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
 plt.show()
 ```
-![Heatmap 2](./heatmap-2.png)
+![Heatmap 2](https://github.com/user-attachments/assets/fe369fc2-b9bc-4623-819e-16ba167453fa)
+
 
 #### Menghapus Kolom dengan Korelasi Lemah
 Pada langkah ini, dilakukan penyederhanaan dataset dengan menghapus fitur yang tidak terlalu berpengaruh atau relevan
@@ -797,10 +801,10 @@ for metric in metrics:
     plt.show()
 ```
 
-![Bar Plot CVR](./bar-plot-cvr.png)
-![Bar Plot R](./bar-plot-r.png)
-![Bar Plot MAE](./bar-plot-mae.png)
-![Bar Plot MSE](./bar-plot-mse.png)
+![Bar Plot CVR](https://github.com/user-attachments/assets/6c03cd1f-aa4c-4089-9598-6d3358d056e2)
+![Bar Plor R](https://github.com/user-attachments/assets/f4e4c9b1-f59a-497b-b674-b137182b66f6)
+![Bar Plot MAE](https://github.com/user-attachments/assets/1056f2a6-148b-4c91-86a8-464480f6cc4f)
+![Bar Plot MSE](https://github.com/user-attachments/assets/c9d1c992-6778-48d5-8395-9c34c3d1dcfa)
 
 #### Visualisasi Hasil dengan Scatter Plot
 ```python
@@ -825,10 +829,11 @@ for metric in metrics:
     plt.show()
 ```
 
-![Scatter Plot CVR](./scatter-plot-cvr.png)
-![Scatter Plot R](./scatter-plot-r.png)
-![Scatter Plot MAE](./scatter-plot-mae.png)
-![Scatter Plot MSE](./scatter-plot-mse.png)
+![Scatter Plot CVR](https://github.com/user-attachments/assets/cfce6be5-bd89-455c-96a9-b4b85cb5d08a)
+![Scatter Plot R](https://github.com/user-attachments/assets/5c2b4674-bfb1-4c4e-92fe-5d1cc843e1e0)
+![Scatter Plot MAE](https://github.com/user-attachments/assets/4ca119c4-972e-4ec7-a5ef-1530292d5879)
+![Scatter Plot MSE](https://github.com/user-attachments/assets/6910dd96-ef85-4040-9fe2-60d7269c3eea)
+
 
 ### Feature Importance Comparison
 Perbandingan fitur penting dilakukan untuk melihat fitur mana yang memiliki kontribusi paling signifikan terhadap prediksi pada setiap model.
@@ -883,9 +888,9 @@ for model in classifiers:
         get_permutation_importance(model, X_test_scaled, y_test, X_train, model_name)
 ```
 
-![RandomForrestRegressor Feature](./random-forrest-feature.png)
-![SVR Feature](./svr-feature.png)
-![KNN Feature](./knn-feature.png)
+![RandomForest Feature](https://github.com/user-attachments/assets/171f86d1-8ca7-415f-885e-9a81b30ccb4c)
+![SVR Feature](https://github.com/user-attachments/assets/a816c8a2-22a7-4d3c-8f7e-bcbf095ac9c8)
+![KNN Feature](https://github.com/user-attachments/assets/13cf8c04-128f-4fe2-a368-4f220055ac91)
 
 #### Perbandingan Across Models
 ```python
@@ -944,7 +949,8 @@ plt.tight_layout()
 plt.show()
 ```
 
-![Accross Feature](./models-feature.png)
+![Models Feature](https://github.com/user-attachments/assets/0fa73304-35fe-4860-b24c-c5716874e1ea)
+
 
 
 ## Kesimpulan
