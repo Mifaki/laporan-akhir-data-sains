@@ -492,12 +492,232 @@ Sebagai contoh, Anda memiih kasus klasifikasi dan menggunakan metrik **akurasi, 
 
 Ingatlah, metrik evaluasi yang digunakan harus sesuai dengan konteks data, problem statement, dan solusi yang diinginkan.
 
-**Rubrik/Kriteria Tambahan (Opsional)**: 
-- Menjelaskan formula metrik dan bagaimana metrik tersebut bekerja.
+Pada bagian ini, evaluasi dilakukan untuk menilai performa model yang telah dilatih menggunakan beberapa metrik evaluasi. Metrik yang digunakan adalah sebagai berikut:
 
-**---Ini adalah bagian akhir laporan---**
+## Evaluation
 
-_Catatan:_
-- _Anda dapat menambahkan gambar, kode, atau tabel ke dalam laporan jika diperlukan. Temukan caranya pada contoh dokumen markdown di situs editor [Dillinger](https://dillinger.io/), [Github Guides: Mastering markdown](https://guides.github.com/features/mastering-markdown/), atau sumber lain di internet. Semangat!_
-- Jika terdapat penjelasan yang harus menyertakan code snippet, tuliskan dengan sewajarnya. Tidak perlu menuliskan keseluruhan kode project, cukup bagian yang ingin dijelaskan saja.
+### Metrik Evaluasi
+
+Untuk mengevaluasi performa model, digunakan beberapa metrik berikut:
+
+- **CV R² (Cross-Validation R²)**: 
+    \[
+    R^2 = 1 - \frac{\sum (y_i - \hat{y}_i)^2}{\sum (y_i - \bar{y})^2}
+    \]
+  Mengukur seberapa baik model memprediksi target dibandingkan rata-rata target dalam data pelatihan. Nilai mendekati 1 menunjukkan model mampu menjelaskan variabilitas target dengan baik.
+
+- **R² (Coefficient of Determination)**: 
+  - Formula sama seperti **CV R²**, tetapi dihitung pada data uji.
+  - Menilai performa model pada data uji untuk mengetahui seberapa baik model mampu melakukan generalisasi. Nilai mendekati 1 menunjukkan prediksi model akurat.
+
+- **MAE (Mean Absolute Error)**: 
+   
+    \[
+    MAE = \frac{1}{n} \sum |y_i - \hat{y}_i|
+    \]
+  Mengukur rata-rata selisih absolut antara nilai prediksi (\(\hat{y}\)) dan nilai aktual (\(y\)). MAE memberikan interpretasi langsung tentang rata-rata error dalam unit asli data.
+
+- **MSE (Mean Squared Error)**: 
+    \[
+    MSE = \frac{1}{n} \sum (y_i - \hat{y}_i)^2
+    \]
+  Mengukur rata-rata kuadrat dari selisih antara nilai prediksi (\(\hat{y}\)) dan nilai aktual (\(y\)). Karena menggunakan kuadrat, MSE lebih sensitif terhadap error besar, sehingga cocok untuk mendeteksi outlier.
+
+### Model Comparison
+
+#### Visualisasi Hasil dengan Bar Plot
+```python
+# Mengkonversi hasil ke pandas DataFrame
+results_data = pd.DataFrame(results).T
+
+# Mengubah index agar nama model sesuai dengan kolom
+results_data = results_data.reset_index().rename(columns={'index': 'Model'})
+
+# Memplot menggunakan Seaborn
+metrics = ['CV R²', 'Test R²', 'MAE', 'MSE']
+for metric in metrics:
+    plt.figure(figsize=(10, 6))
+    sns.barplot(x='Model', y=metric, data=results_data, palette='viridis')
+    plt.title(f'Model Comparison for {metric}')
+    plt.xticks(rotation=45)
+    plt.show()
+```
+
+![Bar Plot CVR](./bar-plot-cvr.png)
+![Bar Plot R](./bar-plot-r.png)
+![Bar Plot MAE](./bar-plot-mae.png)
+![Bar Plot MSE](./bar-plot-mse.png)
+
+#### Visualisasi Hasil dengan Scatter Plot
+```python
+# Visualisasi data menggunakan ScatterPlot
+for metric in metrics:
+    plt.figure(figsize=(10, 6))
+
+    # Penggunaan ScatterPlot untuk setiap metriks
+    sns.scatterplot(data=results_data, x='Model', y=metric, hue='Model', palette='viridis', s=100, marker='o')
+
+    # Mengatur label title dan axis
+    plt.title(f'Model Comparison for {metric}')
+    plt.xticks(rotation=45)
+    plt.ylabel(metric)
+
+    # Kustomisasi legenda dan tata letak
+    plt.legend(loc='best')
+    plt.grid(True)
+    plt.tight_layout()
+
+    # Menampilkan plot
+    plt.show()
+```
+
+![Scatter Plot CVR](./scatter-plot-cvr.png)
+![Scatter Plot R](./scatter-plot-r.png)
+![Scatter Plot MAE](./scatter-plot-mae.png)
+![Scatter Plot MSE](./scatter-plot-mse.png)
+
+### Feature Importance Comparison
+Perbandingan fitur penting dilakukan untuk melihat fitur mana yang memiliki kontribusi paling signifikan terhadap prediksi pada setiap model.
+
+#### Analisis dan Visualisasi Individual
+```python
+# Menambahkan library yang diperlukan
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.inspection import permutation_importance
+
+# Melakukan plotting untuk fitur penting
+def plot_feature_importance(importances, feature_names, model_name):
+    feature_importance_data = pd.DataFrame({
+        'Feature': feature_names,
+        'Importance': importances
+    })
+    feature_importance_data = feature_importance_data.sort_values(by='Importance', ascending=False)
+
+    plt.figure(figsize=(10, 6))
+    sns.barplot(x='Importance', y='Feature', data=feature_importance_data)
+    plt.title(f'{model_name} - Feature Importance')
+    plt.show()
+
+# Untuk model dengan fitur penting bawaan
+def get_feature_importance_native(model, X, model_name):
+    try:
+        importances = model.feature_importances_
+        plot_feature_importance(importances, X.columns, model_name)
+    except AttributeError:
+        print(f"{model_name} does not have native feature importance")
+
+# Untuk model tanpa fitur penting bawaan
+def get_permutation_importance(model, X_test, y_test, X, model_name):
+    result = permutation_importance(model, X_test, y_test, n_repeats=10, random_state=42)
+    importances = result.importances_mean
+    plot_feature_importance(importances, X.columns, model_name)
+
+# Analisis fitur penting untuk setiap model
+for model in classifiers:
+    model_name = model.__class__.__name__
+
+    print(f"Feature Importance for {model_name}:")
+
+    if hasattr(model, 'feature_importances_'):
+        # Native feature importance (tree-based models like RandomForest)
+        get_feature_importance_native(model, X_train, model_name)
+    else:
+        # Permutation importance for models like SVR and KNeighbors
+        get_permutation_importance(model, X_test_scaled, y_test, X_train, model_name)
+```
+
+![RandomForrestRegressor Feature](./random-forrest-feature.png)
+![SVR Feature](./svr-feature.png)
+![KNN Feature](./knn-feature.png)
+
+#### Perbandingan Across Models
+```python
+from sklearn.inspection import permutation_importance
+
+# Normalisasi value yang penting
+def normalize_importance(importances):
+    return importances / np.sum(importances)
+
+# Esktraksi fitur penting
+def get_feature_importance(model, X_train, X_test, y_train, y_test, model_name):
+    try:
+        if hasattr(model, 'feature_importances_'):
+            importances = model.feature_importances_
+        else:
+            # Permutasi
+            result = permutation_importance(model, X_test, y_test, n_repeats=10, random_state=42)
+            importances = result.importances_mean
+
+        # Normalisasi fitur penting untuk perbandingan
+        normalized_importances = normalize_importance(importances)
+        return normalized_importances
+    except Exception as e:
+        print(f"Could not compute feature importance for {model_name}: {e}")
+        return None
+
+# Inisialisasi dictionary untuk menyimpan fitur penting dari setiap model
+feature_importance_comparison = {}
+
+# Melakukan perhitungan dan menyimpan fitur penting pada setiap model
+for model in classifiers:
+    model_name = model.__class__.__name__
+    print(f"Extracting feature importance for {model_name}...")
+
+    # Pelatihan model
+    model.fit(X_train_scaled, y_train)
+
+    # Mendapatkan value yang penting
+    importances = get_feature_importance(model, X_train_scaled, X_test_scaled, y_train, y_test, model_name)
+
+    if importances is not None:
+        feature_importance_comparison[model_name] = importances
+
+# Membuat DataFrame untuk perbandingan
+feature_importance_data = pd.DataFrame(feature_importance_comparison, index=X_train.columns)
+
+# Pembagian perbandingan fitur penting dari setiap model
+plt.figure(figsize=(12, 8))
+feature_importance_data.plot(kind='bar', figsize=(12, 8))
+plt.title("Feature Importance Comparison Across Models")
+plt.xlabel("Features")
+plt.ylabel("Normalized Importance")
+plt.xticks(rotation=90)
+plt.legend(loc='best')
+plt.tight_layout()
+plt.show()
+```
+
+![Accross Feature](./models-feature.png)
+
+
+## Kesimpulan
+
+Berdasarkan hasil pemodelan dan evaluasi, berikut adalah beberapa kesimpulan utama:
+
+### 1. **Super Vector Regressor (SVR) sebagai Model Terbaik**
+   **SVR** menjadi model terbaik berdasarkan performa pengujian pada metrik **R²**, **MAE**, dan **MSE**.
+
+   **Mengapa SVR menjadi model terbaik?**
+   - **R² Tertinggi (0.7355)**: SVR mampu menjelaskan variansi terbesar dalam variabel target (**Exam_Score**), menunjukkan bahwa model ini paling efektif dalam memprediksi hasil secara keseluruhan.
+   - **MAE Terendah (0.7440)**: SVR menghasilkan kesalahan absolut rata-rata terkecil, yang berarti prediksi model lebih dekat dengan nilai sebenarnya dibandingkan dengan model lainnya.
+   - **MSE Terendah (3.7384)**: Kesalahan kuadrat rata-rata terkecil menunjukkan bahwa SVR memiliki generalisasi yang lebih baik dan tingkat kesalahan yang lebih rendah dibandingkan model lainnya.
+
+### 2. **Fitur Terbaik**
+   - **Hours_Studied** dan **Attendance** adalah dua fitur yang konsisten dianggap paling penting dalam semua model yang digunakan.
+   - Kedua fitur ini memiliki **skor kepentingan yang tinggi** (berdasarkan normalisasi), yang menunjukkan bahwa keduanya memiliki **hubungan yang sangat kuat** dengan variabel target, yaitu **performa akademik siswa**.
+
+### 3. **Fitur Terendah**
+   - Fitur seperti **Sleep_Hours**, **Tutoring_Sessions**, dan **Previous_Scores** menunjukkan tingkat kepentingan yang sedang dalam model **RandomForest**. Namun, fitur-fitur ini kurang menonjol dalam model linear seperti **SVR**.
+   - Fitur lainnya, seperti **Physical_Activity**, **Motivation_Level_encoded**, **Parental_Involvement_encoded**, dan **Internet_Access_encoded**, memberikan **kontribusi yang sangat kecil** dalam model. Ini menunjukkan bahwa fitur-fitur tersebut mungkin memiliki **dampak terbatas** dalam memprediksi hasil akademik siswa.
+
+---
+
+### **Penilaian Akhir**
+- **SVR** adalah model yang paling efektif dalam memprediksi nilai ujian akhir siswa, terutama karena kemampuannya untuk menangani data yang terdistribusi secara non-linear dengan baik.
+- **Fitur yang paling penting**: **Hours_Studied** dan **Attendance** menjadi indikator utama yang mempengaruhi performa akademik.
+- **Fitur yang kurang penting**: Beberapa fitur seperti **Sleep_Hours** dan **Parental_Involvement** memiliki kontribusi yang lebih kecil dalam memprediksi **Exam_Score**.
+
 
