@@ -278,12 +278,210 @@ Pengecekan duplikasi dilakukan untuk memastikan dataset bersih dari entri yang t
 Proses **data preparation** yang dilakukan ini melibatkan pengecekan dan penanganan data hilang dengan imputasi, baik untuk kolom numerik menggunakan rata-rata dan untuk kolom kategorikal dengan nilai terbanyak. Setelah imputasi, data kembali diperiksa dan tidak ditemukan nilai yang hilang. Selain itu, pengecekan duplikasi memastikan tidak ada data yang terduplikasi.
 
 ## Modeling
-Tahapan ini membahas mengenai model machine learning yang digunakan untuk menyelesaikan permasalahan. Anda perlu menjelaskan tahapan dan parameter yang digunakan pada proses pemodelan.
+Pada tahap ini, dilakukan proses pemodelan untuk memprediksi nilai ujian akhir siswa (**Exam_Score**) berdasarkan faktor-faktor internal dan eksternal. Proses ini mencakup pembagian data, standarisasi fitur, dan pelatihan model menggunakan tiga algoritma berbeda: **Random Forest Regressor**, **Support Vector Regressor (SVR)**, dan **K-Neighbors Regressor (KNN)**. Berikut adalah tahapan yang dilakukan:
 
-**Rubrik/Kriteria Tambahan (Opsional)**: 
-- Menjelaskan kelebihan dan kekurangan dari setiap algoritma yang digunakan.
-- Jika menggunakan satu algoritma pada solution statement, lakukan proses improvement terhadap model dengan hyperparameter tuning. **Jelaskan proses improvement yang dilakukan**.
-- Jika menggunakan dua atau lebih algoritma pada solution statement, maka pilih model terbaik sebagai solusi. **Jelaskan mengapa memilih model tersebut sebagai model terbaik**.
+### Pembagian Dataset (Train-Test Split)
+Dataset dibagi menjadi dua bagian utama:
+- **Training Set (80%)**: Digunakan untuk melatih model.
+- **Testing Set (20%)**: Disisihkan untuk evaluasi model di tahap berikutnya.
+
+```python
+from sklearn.model_selection import train_test_split
+
+# Membagi data menjadi fitur (X) dan target (y)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+```
+- Memastikan model memiliki data yang berbeda untuk pelatihan dan pengujian sehingga evaluasi model menjadi lebih objektif.
+- Mengurangi risiko overfitting dengan menyediakan data yang tidak pernah dilihat model selama pelatihan.
+
+### Standarisasi Fitur (Feature Scaling)
+Setelah membagi data, dilakukan proses standarisasi untuk memastikan semua fitur berada pada skala yang sama. Hal ini dilakukan menggunakan ``StandardScaler`` dari scikit-learn:
+
+```python
+from sklearn.preprocessing import StandardScaler
+
+# Standarisasi fitur
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)  
+```
+- Menormalkan data untuk model yang sensitif terhadap skala data, seperti Support Vector Regressor (SVR) dan K-Neighbors Regressor (KNN).
+- Meningkatkan stabilitas numerik algoritma dan membantu model berperforma lebih baik.
+
+### Pemilihan dan Inisialisasi Model
+Tiga algoritma machine learning digunakan dalam proses ini untuk membangun model prediksi. Berikut adalah model yang digunakan:
+- Random Forest Regressor: Model ensemble berbasis pohon keputusan.
+- Support Vector Regressor (SVR): Model yang menggunakan hyperplane dan kernel untuk prediksi.
+- K-Neighbors Regressor (KNN): Model berbasis instance yang memprediksi target berdasarkan tetangga terdekat.
+
+```python
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.svm import SVR
+from sklearn.neighbors import KNeighborsRegressor
+
+# Model Training, Cross-Validation, and Evaluation
+from sklearn.model_selection import cross_val_score
+
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.preprocessing import StandardScaler
+
+# Inisialisasi Model
+classifiers = [
+    RandomForestRegressor(),
+    SVR(),
+    KNeighborsRegressor()
+] 
+```
+- Memilih algoritma yang sesuai untuk memprediksi nilai ujian akhir siswa berdasarkan faktor-faktor yang tersedia.
+- Menginisialisasi model dengan parameter default sebelum melanjutkan ke proses pelatihan.
+
+### Tanpa StandardScaler
+Proses pertama dilakukan tanpa menggunakan standarisasi fitur untuk mengetahui performa awal model pada data mentah. Langkah-langkahnya mencakup validasi silang (``cross-validation``) dan pelatihan model.
+```python
+withoutresults = {}
+for model in classifiers:
+  model_name = model.__class__.__name__
+   print(f"\nTraining {model_name}...")
+
+  # Melakukan validasi silang (5-fold cross-validation) untuk mengevaluasi performa model secara lebih umum menggunakan skor R
+  cv_scores = cross_val_score(model, X_train, y_train, cv=5, scoring='r2')
+
+  # Menyesuaikan model dengan training set
+  model.fit(X_train, y_train)
+
+  # Prediksi
+  y_pred = model.predict(X_test)
+
+  # Metriks evaluasi
+  r2 = r2_score(y_test, y_pred)
+  mae = mean_absolute_error(y_test, y_pred)
+  mse = mean_squared_error(y_test, y_pred)
+
+  # Menyimpan hasil
+  withoutresults[model_name] = {
+      "CV R²": np.mean(cv_scores),
+      "Test R²": r2,
+      "MAE": mae,
+      "MSE": mse
+}
+```
+- Melakukan validasi silang untuk mengevaluasi performa model pada data pelatihan dengan membagi data menjadi lima lipatan (folds).
+- Melatih model menggunakan data pelatihan mentah untuk menghasilkan model dasar tanpa preprocessing tambahan.
+
+### Menampilkan Hasil Tanpa StandardScaler
+```python
+# Menampilkan hasil
+for model_name, metrics in withoutresults.items():
+    print(f"\nModel: {model_name}")
+    for metric_name, value in metrics.items():
+        print(f"{metric_name}: {value:.4f}")
+```
+
+```plaintext
+Model: RandomForestRegressor
+CV R²: 0.6141
+Test R²: 0.6482
+MAE: 1.1597
+MSE: 4.9728
+
+Model: SVR
+CV R²: 0.6808
+Test R²: 0.7325
+MAE: 0.7647
+MSE: 3.7814
+
+Model: KNeighborsRegressor
+CV R²: 0.2701
+Test R²: 0.2970
+MAE: 2.2265
+MSE: 9.9364
+```
+
+Hasil Pengukuran:
+| Model | CV R² | Test R² | MAE | MSE |
+| --- | --- | --- | --- | --- |
+| RandomForestRegressor | 0.6183 | 0.6560 | 1.1392 | 4.8629 |
+| SVR (Support Vector Regressor) | 0.6808 | 0.7325 | 0.7647 | 3.7814 |
+| KNeighborsRegressor | 0.2701 | 0.2970 | 2.2265 | 9.9364 |
+
+- SVR adalah model terbaik berdasarkan metrik evaluasi, karena memiliki skor R² tertinggi dan error terendah.
+- Model Random Forest cukup kompetitif, tetapi tidak sebaik SVR.
+- Model K-Neighbors memiliki performa terburuk yang mungkin disebabkan oleh sensitivitasnya terhadap ukuran dataset atau distribusi data.
+
+### Dengan StandardScaler
+Proses berikutnya dilakukan dengan menggunakan data yang telah di-scaling menggunakan StandardScaler. Standarisasi ini memastikan bahwa model yang sensitif terhadap skala data dapat bekerja lebih optimal.
+```python
+results = {}
+for model in classifiers:
+    model_name = model.__class__.__name__
+    print(f"\nTraining {model_name}...")
+
+    # Cross-validation (5-fold)
+    cv_scores = cross_val_score(model, X_train_scaled, y_train, cv=5, scoring='r2')
+
+    # Menyesuaikan model dengan training set
+    model.fit(X_train_scaled, y_train)
+
+    # Prediksi
+    y_pred = model.predict(X_test_scaled)
+
+    # Metriks evaluasi
+    r2 = r2_score(y_test, y_pred)
+    mae = mean_absolute_error(y_test, y_pred)
+    mse = mean_squared_error(y_test, y_pred)
+
+    # Menyimpan hasil
+    results[model_name] = {
+      "CV R²": np.mean(cv_scores),
+      "Test R²": r2,
+      "MAE": mae,
+      "MSE": mse
+}
+```
+- Memanfaatkan data yang telah di-scaling untuk meningkatkan performa model yang sensitif terhadap skala data, seperti SVR dan KNN.
+- Membandingkan hasil validasi silang antara model dengan dan tanpa scaling untuk menentukan dampak preprocessing terhadap performa model.
+
+### Menampilkan Hasil Dengan StandardScaler
+```python
+# Menampilkan hasil
+for model_name, metrics in results.items():
+    print(f"\nModel: {model_name}")
+    for metric_name, value in metrics.items():
+        print(f"{metric_name}: {value:.4f}")
+```
+
+```plaintext
+Model: RandomForestRegressor
+CV R²: 0.6143
+Test R²: 0.6456
+MAE: 1.1511
+MSE: 5.0096
+
+Model: SVR
+CV R²: 0.6825
+Test R²: 0.7324
+MAE: 0.7682
+MSE: 3.7823
+
+Model: KNeighborsRegressor
+CV R²: 0.4700
+Test R²: 0.4988
+MAE: 1.6828
+MSE: 7.0843
+```
+
+Hasil Pengukuran:
+
+| Model | CV R² | Test R² | MAE | MSE |
+| --- | --- | --- | --- | --- |
+| RandomForestRegressor | 0.6184 | 0.6510 | 1.1548 | 4.9325 |
+| SVR | 0.6825 | 0.7324 | 0.7682 | 3.7823 |
+| KNeighborsRegressor | 0.4700 | 0.4988 | 1.6828 | 7.0843 |
+
+- Proses ini mengubah data ke dalam bentuk distribusi normal dengan rata-rata 0 dan standar deviasi 1. Hal ini membantu algoritma tertentu seperti SVR dan KNeighborsRegressor, yang sensitif terhadap skala fitur.
+- SVR adalah model terbaik dalam eksperimen ini, terutama karena sensitif terhadap data yang diskalakan dengan StandardScaler.
+- Random Forest juga memberikan hasil yang cukup baik tetapi tidak seoptimal SVR.
+- KNeighborsRegressor tidak bekerja dengan baik dalam skenario ini, mungkin karena sifat dataset yang lebih cocok untuk model non-lokal atau kompleks.
 
 ## Evaluation
 Pada bagian ini anda perlu menyebutkan metrik evaluasi yang digunakan. Lalu anda perlu menjelaskan hasil proyek berdasarkan metrik evaluasi yang digunakan.
